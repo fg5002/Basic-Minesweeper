@@ -1,11 +1,12 @@
-let fieldSides;
-let numberOfMines;
+let fieldSides
+let numberOfMines
+let hiddenFields
 
 window.addEventListener('DOMContentLoaded',()=> {
-    fieldSides=20
+    fieldSides=5
     numberOfMines=(fieldSides**2/5).toFixed(0) 
+    hiddenFields=fieldSides**2
     generateMinefield()
-    plantMines()
 });
 
 function generateMinefield(){
@@ -34,12 +35,14 @@ function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min) + min);
 }
 
-function plantMines(){
+function plantMines(f){
+    let savedPlace=getNeighbors(f)
+    savedPlace.push(`.${f.classList[0]}`)
     let i=0
     while (i < numberOfMines) {        
         let pos=`f${getRandomInt(0,fieldSides)}-${getRandomInt(0,fieldSides)}`
         let ff=document.querySelector(`.${pos}`)
-        if(!ff.classList.contains('mine')){
+        if(!ff.classList.contains('mine') && !savedPlace.includes(`.${pos}`) ){
             ff.classList.add('mine')
             i++
         }
@@ -47,6 +50,9 @@ function plantMines(){
 }
 
 function stepOnField(f){
+    if(hiddenFields==fieldSides**2){    // Planting mine after the first step
+        plantMines(f)
+    }
     if(f.classList.contains('mine')) stepOnMine(f)
     else{
         f.classList.remove('flag')
@@ -76,9 +82,7 @@ function stepOnMine(){
 }
 
 function checkIfWin(){
-    let countHide=document.querySelectorAll('.hide')
-    let countFlag=document.querySelectorAll('.flag')
-    if(countHide.length==numberOfMines && countFlag.length==numberOfMines){
+    if(hiddenFields==numberOfMines){
         unhideAll()
         console.log("You have won!")
     }
@@ -112,7 +116,7 @@ function checkNeighbors(f){
         else res.push(sfield)
     }
     f.classList.remove('hide')
+    hiddenFields--
     if(mine>0) f.textContent=mine
     else if(res.length>0) res.map(checkNeighbors)
 }
-
