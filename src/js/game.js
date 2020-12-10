@@ -1,9 +1,15 @@
+import {game} from "./minesweeper.js"
+
+window.addEventListener('DOMContentLoaded',()=> new game())
+
+/* -------------------------------------------------------------------------------------
+
 let fieldSides
 let numberOfMines
 let hiddenFields
 
 window.addEventListener('DOMContentLoaded',()=> {
-    fieldSides=5
+    fieldSides=10
     numberOfMines=(fieldSides**2/5).toFixed(0) 
     hiddenFields=fieldSides**2
     generateMinefield()
@@ -82,7 +88,7 @@ function stepOnMine(){
 }
 
 function checkIfWin(){
-    if(hiddenFields==numberOfMines){
+    if(hiddenFields==numberOfMines){ 
         unhideAll()
         console.log("You have won!")
     }
@@ -120,3 +126,5 @@ function checkNeighbors(f){
     if(mine>0) f.textContent=mine
     else if(res.length>0) res.map(checkNeighbors)
 }
+
+-----------------------------------------------------------------------------*/
