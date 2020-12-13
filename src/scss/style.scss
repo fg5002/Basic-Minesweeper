@@ -6,37 +6,58 @@
 
 body{
     background-color: #dbffb7;
+    min-width: 320px;
 }
 
 .navbar{
     display: flex;
     position: sticky;
+    flex-direction: column;
+    gap: 10px;
     top: 0px;
     background-color: yellowgreen;
     border-bottom: 3px solid grey;
-    padding: 0.5rem 1rem;
+    padding: 10px 20px;
+    
 }
 
+.title{
+    padding: 0px;
+}
 .menuwrapper{
     display: flex;
-    margin-left: auto;
-    float: right;
-    justify-content: right;
     gap: 10px;
-    background-color:yellowgreen;
-    padding: 5px 10px;
-}
-
-.startbtn,.sizesel,.modesel{
+    padding: 5px 0px;
+}    
+.startbtn,.sizeselect,.modeselect{
     background-color: yellow;
     padding: 3px 5px;
     border-radius: 3px;
-    width: 80px;
 }
 
-.wrapper{
-    margin-top: 50px;
+option:last-child{
+    display: none;
+}
+
+.textwrapper{
     display: flex;
+    justify-content: center;
+        flex-grow: 1;
+        padding: 5px 10px;
+        margin: 10px 0px;
+
+        h3{
+            padding: 5px 10px;
+            margin-right: 40x;
+            border-radius: 3px;
+            background-color: red;
+            color: white;
+        }
+    }
+    
+.wrapper{
+    display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
 }
@@ -45,20 +66,49 @@ body{
     width: auto;
     display: grid;    
     border: 1px solid grey;
-    .field{
-        background-color: yellow;
-        text-align: center;
-        border: 1px solid grey;
-        color: green;
-        font-weight: 400;
+    user-select: none;
+}
+
+.field{
+    background-color: yellow;
+    text-align: center;
+    border: 1px solid grey;
+    color: green;
+    font-weight: 400;
+}
+
+.mine{
+    background-color: red;
+}
+.hide{
+    background-color: whitesmoke;
+}
+.flag{
+    background-color: #0080ff;
+}
+
+.flagbtn{
+    background-color: yellow;
+    padding: 3px 10px;
+    border-radius: 3px;
+    margin-top: 20px;
+    &.flagged{
+        background-color: #0080ff;
+        color: white;
     }
-    .mine{
-        background-color: red;
+}
+
+@media only screen and (min-width: 520px){
+    .navbar{
+        flex-direction: row;
+        justify-content: space-between;
     }
-    .hide{
-        background-color: whitesmoke;
+    option:last-child{
+        display: inline-block;
     }
-    .flag{
-        background-color: #8000ff;
+    .flagbtn{
+        display: none;
     }
+
+
 }

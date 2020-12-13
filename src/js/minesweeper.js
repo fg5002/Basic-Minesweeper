@@ -1,272 +1,243 @@
+window.addEventListener('DOMContentLoaded',()=> new game())
+
 let mfld
-let nbar
-let menu
-let mineFieldWidth=5
-let mineFieldHeight=5
-let minePercent=10
+
+let fieldSizes=[
+    {title: 'Tiny', size: 5},
+    {title: 'Small', size: 10},
+    {title: 'Medium', size: 15},
+    {title: 'Large', size: 25}
+]
+
+let minePercents=[
+    {title: 'Easy', perc: 10},
+    {title: 'Moderate', perc: 20},
+    {title: 'Hard', perc: 25}
+]
+
+let sizes=5
+let mines=10
 
 class game{
     constructor(){
         new navbar()
-        new startButton()
-        new sizeSelect()
-        new modeSelect() 
-        mfld=new mineField(mineFieldWidth,mineFieldHeight,minePercent)       
+        mfld=new mineField(5,10)
     }
-    
+
     static changeMode(){
-        document.querySelector('.wrapper').remove()
-        mfld=new mineField(mineFieldWidth,mineFieldHeight,minePercent)
+        document.querySelector('.minefield').remove()
+        mfld=new mineField(sizes,mines)
+        document.querySelector('h3').innerText=`${mfld.numberOfMines} mines left`
     }
 }
 
 class navbar{
     constructor(){
-        nbar=document.createElement('div')
-        nbar.classList.add('navbar')
-        document.querySelector('body').appendChild(nbar)
-        let h1=document.createElement('h1')
-        h1.textContent="Minesweeper"
-        nbar.appendChild(h1)
-        menu=document.createElement('div')
-        menu.classList.add('menuwrapper')
-        nbar.appendChild(menu)        
-    }
-}
+        document.querySelector('body').innerHTML=
+            `<div class="navbar">
+                <div class="title">
+                    <h1>Minesweeper</h1>
+                </div>
+                <div class="menuwrapper">
+                    <input class="startbtn" type="button" value="New game"></input>
+                    <select class="sizeselect"></select>
+                    <select class="modeselect"></select>                    
+                </div>
+            </div>
+            <div class="textwrapper">
+                <h3>10 mines</h3>
+            </div>
+            <div class="wrapper">
+                <input class="flagbtn" type="button" value="Flag"></input>
+            </div>`
 
-class startButton{
-    constructor(){
-        let stbtn=document.createElement('input')
-        stbtn.classList.add('startbtn')
-        stbtn.setAttribute('type','button')
-        stbtn.value="Start"
-        stbtn.textContent="Minesweeper"
-        stbtn.addEventListener('click',()=> mfld.newGame())
-        menu.appendChild(stbtn)        
-    }
-}
-
-class sizeSelect{
-    constructor(){
-        let sisel=document.createElement('select')
-        sisel.classList.add('sizesel')
-        sisel.addEventListener('change',()=> this.changeSide(sisel.selectedIndex))
-        menu.appendChild(sisel)
-        let opt=document.createElement('option') 
-        opt.textContent='Small'
-        sisel.appendChild(opt)
-        opt=document.createElement('option') 
-        opt.textContent='Medium'
-        sisel.appendChild(opt)
-        opt=document.createElement('option') 
-        opt.textContent='Large'
-        sisel.appendChild(opt) 
+            document.querySelector('.startbtn').addEventListener('click',()=> mfld.newGame())
+            let size=document.querySelector('.sizeselect')
+            size.addEventListener('change',(e)=> this.changeSize(e.target.value))
+            fieldSizes.map(d=>{ size.insertAdjacentHTML('beforeend',
+                `<option value="${d.size}">${d.title}</option>`)
+            })     
+            let mode=document.querySelector('.modeselect')
+            mode.addEventListener('change',(e)=>  this.changeMode(e.target.value))
+            minePercents.map(d=>{ mode.insertAdjacentHTML('beforeend',
+                `<option value="${d.perc}">${d.title}</option>`)
+            })                            
+            document.querySelector('.flagbtn').addEventListener('click',(e)=>{
+                e.target.classList.toggle('flagged')
+            });
+            window.matchMedia('(max-width: 520px)').addEventListener("change",()=> 
+                this.changeToBasicSize())
     }
 
-    changeSide(s){
-        switch (s) {            
-            case 1:
-                mineFieldWidth=15
-                mineFieldHeight=15            
-                break;                                            
-            case 2:
-                mineFieldWidth=25
-                mineFieldHeight=25
-                break;                
-            default:
-                mineFieldWidth=5
-                mineFieldHeight=5
-                break;
-        }     
+    changeToBasicSize(){
+        if(sizes>2){
+            document.querySelector('.sizeselect').selectedIndex=2
+            this.changeSize(15)
+        }
+    }
+
+    changeSize(s){
+        sizes=parseInt(s)
         game.changeMode()
     }
-}
-
-class modeSelect{
-    constructor(){
-        let mdsel=document.createElement('select')
-        mdsel.classList.add('modesel')
-        mdsel.addEventListener('change',()=> this.changeMode(mdsel.selectedIndex))        
-        menu.appendChild(mdsel)
-        let opt=document.createElement('option') 
-        opt.textContent='Easy'
-        mdsel.appendChild(opt)
-        opt=document.createElement('option') 
-        opt.textContent='Medium'
-        mdsel.appendChild(opt)
-        opt=document.createElement('option') 
-        opt.textContent='Hard'
-        mdsel.appendChild(opt) 
-    }
-
-    changeMode(s){     
-        switch (s) {
-            case 1:
-                minePercent=20            
-                break;                                            
-            case 2:
-                minePercent=25
-                break;                
-            default:
-                minePercent=10
-                break;
-        }            
+    
+    changeMode(s){ 
+        mines=parseInt(s)
         game.changeMode()
     }
 }
 
 class mineField{
-    constructor(fieldwidth, fieldheight, minepercent){
-        this.fieldwidth=fieldwidth
-        this.fieldheight=fieldheight
-        this.fieldNumber=this.fieldwidth*this.fieldheight
+    constructor(sizes, mines){
+        this.size=sizes
+        this.fieldNumber=sizes**2
         this.hiddenFields=this.fieldNumber
-        this.numberOfMines=(this.fieldNumber*(minepercent/100)).toFixed(0)
-        this.fields={};
+        this.numberOfMines=(this.fieldNumber*mines/100).toFixed(0)
+        this.fields={}
+        this.mineStore=new Set()
+        this.flagStore=new Set()
         this.init()
-        console.log(this.numberOfMines)
     }
     
     init(){
-        const wrapper=document.createElement('div')
-        wrapper.classList.add('wrapper')
-        document.querySelector('body').appendChild(wrapper)
-        const mfield=document.createElement('div')
-        mfield.classList.add('minefield')
-        wrapper.appendChild(mfield)
-        mfield.style.gridTemplateRows=`repeat(${this.fieldheight},20px)`
-        mfield.style.gridTemplateColumns=`repeat(${this.fieldwidth},20px)`    
+        document.querySelector('.wrapper').insertAdjacentHTML("afterbegin", 
+            `<div class="minefield"></div>`);
+        document.querySelector('h3').innerText=`${this.numberOfMines} mines`
+        const mfield=document.querySelector('.minefield')
+        mfield.style.gridTemplateRows=`repeat(${this.size},20px)`
+        mfield.style.gridTemplateColumns=`repeat(${this.size},20px)`    
     
-        for(let i=0;i<this.fieldheight;i++){
-            for(let j=0;j<this.fieldwidth;j++){
+        for(let i=0;i<this.size;i++){
+            for(let j=0;j<this.size;j++){
                 let par=new field()
                 par.id=`${i}.${j}`
                 this.fields[par.id]=par
-                par.hideField()
                 mfield.appendChild(par.div)
             }
-        }     
+        }
+        this.newGame()   
     }
+    
+    fieldStore=()=> Object.entries(this.fields).map(d=>d[0])
 
+    addFields=([...d],...g)=> d.map(d=> this.fields[d].div.classList.add(...g))
+
+    clearFields=([...d],...g)=> d.map(d=> this.fields[d].div.classList.remove(...g))
+
+    displayText=(t)=> document.querySelector('h3').innerText=t
+
+    isAllHidden=()=> mfld.hiddenFields==mfld.fieldNumber ? true : false
+    
+    isFinished=()=>{
+        let res=this.hiddenFields==this.numberOfMines ? true : false
+        if(res) this.gameOver(true)
+        return res
+    }
+        
     newGame(){
         this.hiddenFields=this.fieldNumber
-        Object.entries(this.fields).map(d=> {
-            let fld=this.fields[d[0]]
-            fld.mined=false
-            fld.div.classList.remove('mine','flag')
-            fld.hideField()
-        })
+        this.mineStore.clear()
+        this.flagStore.clear()
+        this.clearFields(this.fieldStore(),'mine','flag')
+        this.fieldStore().map(d=>this.fields[d].displayFieldText(''))
+        this.addFields(this.fieldStore(),'hide')
+        this.displayText(`${this.numberOfMines} mines left`)
     }
-
+    
     gameOver(res){
-        console.log(res ? 'You have won!' : 'Bumm! You have lost!')
-        Object.entries(this.fields).map(d=> 
-            this.fields[d[0]].div.classList.remove('hide','flag'))
-    } 
-
-    checkIfWin(){
-        if(mfld.hiddenFields==mfld.numberOfMines) this.gameOver(true)
+        this.displayText(res ? 'Congratulation!' : 'Sorry, you have died...')
+        this.clearFields(this.fieldStore(),'hide','flag')
+        this.addFields(this.mineStore,'mine')
     }
-
+    
     getRandomInt(min,max) {
         min=Math.ceil(min);
         max=Math.floor(max);
         return Math.floor(Math.random()*(max-min)+min);
     }
     
-    getNeighbors(f){
-        const ar=[[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]]
-        let selfPos=f.id.split('.').map(d=>{
-            return parseInt(d);
-        })
-        return ar.map(d=>{
-            let x=selfPos[0]+d[0]
-            let y=selfPos[1]+d[1]
-            if((x>=0 && x<this.fieldwidth) && (y>=0 && y<this.fieldheight)){
-                return `${x}.${y}`
-            }
-        }).filter(f=> f!==undefined)
+    getNeighborsCoord(f,w){ 
+        const spos=f.id.split('.').map(d=>parseInt(d))
+        const ar=[].concat(...[-1,1,0].map(d=>[-1,1,0].map(g=>[spos[0]+d,spos[1]+g])))
+        return ar.filter(d=>d[0]>-1 && d[1]>-1 && d[0]<w && d[1]<w).map(d=>`${d[0]}.${d[1]}`)
     }
-
+    
     plantMines(f){
-        let savedPlace=this.getNeighbors(f)
-        savedPlace.push(f.id)
+        let savedPlace=this.getNeighborsCoord(f, this.size)
         let i=0    
         while (i < this.numberOfMines) {
-            let x=this.getRandomInt(0,this.fieldwidth) 
-            let y=this.getRandomInt(0,this.fieldheight)
+            let x=this.getRandomInt(0,this.size) 
+            let y=this.getRandomInt(0,this.size)
             let pos=`${x}.${y}`
-            let p=this.fields[pos]
-            if(p.mined==false && !savedPlace.includes(pos)){
-                p.mined=true
-                p.div.classList.add('mine')
+            if(!savedPlace.includes(pos) && !this.mineStore.has(pos)){
+                this.mineStore.add(pos)
                 i++
             }
         }
     }
 
     checkNeighbors(f){
-        if(f.hidden==false) return false 
-        let mine=0
-        let n=this.getNeighbors(f)            
+        if(!f.isHidden()) return false
+        this.hiddenFields--
+        if(this.isFinished()) return false
+        let foundmine=0
+        let n=this.getNeighborsCoord(f, this.size)
+        n.pop()
         let res=n.map(d=>{
-            let p=this.fields[d]
-            if(p.mined) mine++
-            else return p
+            if(this.mineStore.has(d)) foundmine++
+            else return this.fields[d]
         })
-        f.unhideField()
-        if(mine>0) f.div.textContent=mine
+        this.clearFields([f.id],'hide','flag')
+        if(foundmine>0) f.displayFieldText(foundmine)
         else if(res.length>0) res.map(d=>this.checkNeighbors(d))
-    }
+    }  
 }
 
 class field{
     constructor(){
         this.id='';
-        this.hidden=false
-        this.flagged=false
-        this.mined=false
         this.div=document.createElement('div') 
         this.div.classList.add('field') 
-        this.div.addEventListener('click',()=> this.stepOnField(this))
+        this.div.addEventListener('click',()=> this.stepOnField())
         this.div.addEventListener('contextmenu',(e)=>{
             this.toggleFlag()
             e.preventDefault()
         })            
     }
+    
+    stepOnField(){
+        if(!this.isHidden()) return false 
+        if(this.isFlagButtonChecked()) return false
+        if(this.isFlagged() || this.isMine()) return false
+        if(mfld.isAllHidden()) mfld.plantMines(this)
+        mfld.checkNeighbors(this)
+    }
+    
+    isHidden=()=> this.div.classList.contains('hide') ? true : false
 
-    stepOnField(f){
-        if(!this.div.classList.contains('hide')) return false  // nem működik a this.hidden
-        if(mfld.hiddenFields==mfld.fieldNumber) mfld.plantMines(this)
-        if(f.mined) mfld.gameOver(false)
-        else{  
-            mfld.checkNeighbors(this)
-            mfld.checkIfWin()
+    isFlagged=()=> this.div.classList.contains('flag') ? true : false 
+
+    displayFieldText=(t)=> this.div.textContent=t
+
+    isMine=()=>{
+        let res=mfld.mineStore.has(this.id) ? true : false
+        if(res) mfld.gameOver(false)
+        return res
+    }
+
+    toggleFlag=()=>{
+        if(mfld.isAllHidden() || !this.isHidden()) return false
+        mfld.flagStore.has(this.id) ? mfld.flagStore.delete(this.id) : mfld.flagStore.add(this.id)
+        this.div.classList.toggle('flag')
+        mfld.displayText(`${mfld.numberOfMines-mfld.flagStore.size} mine(s) left`)
+    }
+    
+    isFlagButtonChecked=()=>{
+        let res=document.querySelector('.flagbtn').classList.contains('flagged') ? true : false
+        if(res){
+            this.toggleFlag()
+            document.querySelector('.flagbtn').classList.toggle('flagged')
         }
-        
+        return res
     }
-
-    toggleFlag(){
-        if(this.div.classList.contains('hide')){
-            this.flagged ? this.flagged=false : this.flagged=true
-            this.div.classList.toggle('flag')
-        }
-    }
-
-    hideField(){
-        this.hidden=true
-        this.div.textContent=""
-        this.div.classList.add('hide')
-    }
-
-    unhideField(){
-        this.hidden=false
-        this.div.classList.remove('hide')
-        mfld.hiddenFields--
-        if(this.flagged) this.toggleFlag()
-    }
-}
-
-export {
-    game
 }
